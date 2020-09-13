@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 class Server {
 	public static void main(String args[]) throws Exception {
@@ -38,15 +39,29 @@ class Server {
 						System.out.println("received request header, data payload has length " + reqDataLen);
 						byte[] bytes = new byte[reqDataLen];
 						in.readFully(bytes);
-						System.out.println("write out input bytes:");
-						for (Byte b: bytes) {
-							System.out.println(b);
-						}
+//						System.out.println("write out input bytes:");
+//						for (Byte b: bytes) {
+//							System.out.println(b);
+//						}
 
 						String inputDataString = new String(bytes, StandardCharsets.UTF_8);
 						//System.out.println(inputDataString);
 
-						/* construct the graph */
+						/* construct the graph: Adjacency Lists */
+						Map<String, Set<String>> graph = new HashMap<>();
+						buildGraph(inputDataString, graph);
+//						System.out.println("Output the input graph: ");
+//						for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
+//							System.out.print(entry.getKey() + ": ");
+//							for (String v2 : entry.getValue()) {
+//								System.out.print(v2 + " ");
+//							}
+//							System.out.println();
+//						}
+
+						/* get triangles in the graph and write it to the output */
+
+
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -55,6 +70,24 @@ class Server {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	private static void buildGraph(String s, Map<String, Set<String>> graph) {
+		Scanner scanner = new Scanner(s);	//default delimiter include " "(0x32) and "/n"(0x10)
+		while (scanner.hasNext()) {
+			String v1 = scanner.next();	//vertex 1
+			String v2 = scanner.next();	//vertex 2
+			// make sure (v1, v2) is in ascending order
+			if (v1.length() > v2.length() || (v1.length() == v2.length() && v1.compareTo(v2) > 0)) {	// v1 > v2
+				String tmp = v1;
+				v1 = v2;
+				v2 = tmp;
+			}
+			if (!graph.containsKey(v1)) {
+				graph.put(v1, new HashSet<>());
+			}
+			graph.get(v1).add(v2);
 		}
 	}
 }
