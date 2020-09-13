@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 class Server {
 	public static void main(String args[]) throws Exception {
@@ -26,6 +27,31 @@ class Server {
 				  - the payload is a string (UTF-8)
 				  - the inner loop ends when the client closes the connection
 				*/
+				/* 1. accept a connection from the server socket. */
+				Socket connectionSocket = ssock.accept();
+
+				while (true) {
+					try {
+						/* get edges from the input as bytes */
+						DataInputStream in = new DataInputStream(connectionSocket.getInputStream());
+						int reqDataLen = in.readInt();
+						System.out.println("received request header, data payload has length " + reqDataLen);
+						byte[] bytes = new byte[reqDataLen];
+						in.readFully(bytes);
+						System.out.println("write out input bytes:");
+						for (Byte b: bytes) {
+							System.out.println(b);
+						}
+
+						String inputDataString = new String(bytes, StandardCharsets.UTF_8);
+						//System.out.println(inputDataString);
+
+						/* construct the graph */
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
