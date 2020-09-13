@@ -31,7 +31,7 @@ class Server {
 				/* 1. accept a connection from the server socket. */
 				Socket connectionSocket = ssock.accept();
 
-				while (true) {
+				//while (true) {
 					try {
 						/* get edges from the input as bytes */
 						DataInputStream in = new DataInputStream(connectionSocket.getInputStream());
@@ -50,23 +50,31 @@ class Server {
 						/* construct the graph: Adjacency Lists */
 						Map<String, Set<String>> graph = new HashMap<>();
 						buildGraph(inputDataString, graph);
-//						System.out.println("Output the input graph: ");
-//						for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
-//							System.out.print(entry.getKey() + ": ");
-//							for (String v2 : entry.getValue()) {
-//								System.out.print(v2 + " ");
-//							}
-//							System.out.println();
-//						}
+						System.out.println("Output the input graph: ");
+						for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
+							System.out.print(entry.getKey() + ": ");
+							for (String v2 : entry.getValue()) {
+								System.out.print(v2 + " ");
+							}
+							System.out.println();
+						}
 
 						/* get triangles in the graph and write it to the output */
+						String triangleStr = getTriangles(graph);
+						System.out.println("The triangles are:" + "\n" + triangleStr);
 
+						/* transfer the result back to the client */
+						byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
+						DataOutputStream dout = new DataOutputStream(connectionSocket.getOutputStream());
+						dout.writeInt(outBytes.length);
+						dout.write(outBytes);
+						dout.flush();
 
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				}
-
+//				}
+//
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -79,7 +87,7 @@ class Server {
 			String v1 = scanner.next();	//vertex 1
 			String v2 = scanner.next();	//vertex 2
 			// make sure (v1, v2) is in ascending order
-			if (v1.length() > v2.length() || (v1.length() == v2.length() && v1.compareTo(v2) > 0)) {	// v1 > v2
+			if (isDescending(v1, v2)) {	// v1 > v2
 				String tmp = v1;
 				v1 = v2;
 				v2 = tmp;
@@ -89,5 +97,26 @@ class Server {
 			}
 			graph.get(v1).add(v2);
 		}
+	}
+
+	private static String getTriangles(Map<String, Set<String>> graph) {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
+			String v1 = entry.getKey();
+			for (String v2 : entry.getValue()) {
+				if (isDescending(v2, v1) && graph.containsKey(v2)) {
+					for (String v3 : graph.get(v2)) {
+						if (isDescending(v3, v2) && graph.get(v1).contains(v3)) {
+							sb.append(v1 + " " + v2 + " " + v3 + '\n');
+						}
+					}
+				}
+			}
+		}
+		return sb.toString();
+	}
+
+	private static boolean isDescending(String v1, String v2) {
+		return v1.length() > v2.length() || (v1.length() == v2.length() && v1.compareTo(v2) > 0);
 	}
 }
