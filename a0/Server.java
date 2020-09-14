@@ -31,7 +31,7 @@ class Server {
 				/* 1. accept a connection from the server socket. */
 				Socket connectionSocket = ssock.accept();
 
-				//while (true) {
+				// while (true) {
 					try {
 						/* get edges from the input as bytes */
 						DataInputStream in = new DataInputStream(connectionSocket.getInputStream());
@@ -39,7 +39,7 @@ class Server {
 						System.out.println("received request header, data payload has length " + reqDataLen);
 						byte[] bytes = new byte[reqDataLen];
 						in.readFully(bytes);
-//						System.out.println("write out input bytes:");
+//						System.out.println("input bytes:");
 //						for (Byte b: bytes) {
 //							System.out.println(b);
 //						}
@@ -50,18 +50,18 @@ class Server {
 						/* construct the graph: Adjacency Lists */
 						Map<String, Set<String>> graph = new HashMap<>();
 						buildGraph(inputDataString, graph);
-						System.out.println("Output the input graph: ");
-						for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
-							System.out.print(entry.getKey() + ": ");
-							for (String v2 : entry.getValue()) {
-								System.out.print(v2 + " ");
-							}
-							System.out.println();
-						}
+//						System.out.println("input graph: ");
+//						for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
+//							System.out.print(entry.getKey() + ": ");
+//							for (String v2 : entry.getValue()) {
+//								System.out.print(v2 + " ");
+//							}
+//							System.out.println();
+//						}
 
 						/* get triangles in the graph and write it to the output */
 						String triangleStr = getTriangles(graph);
-						System.out.println("The triangles are:" + "\n" + triangleStr);
+//						System.out.println("The triangles are:" + "\n" + triangleStr);
 
 						/* transfer the result back to the client */
 						byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
@@ -74,7 +74,7 @@ class Server {
 						e.printStackTrace();
 					}
 //				}
-//
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

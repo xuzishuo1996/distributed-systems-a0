@@ -52,6 +52,5 @@ class Client {
 
 		// note: you should keep the connection open and reuse it
 		//       if sending multiple requests back-to-back
-		while (true);
 	}
 }

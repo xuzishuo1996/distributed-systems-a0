@@ -23,3 +23,6 @@ out/
 
 ###### 3. VS Code ######
 .vscode/
+
+###### 4. Project Specific ######
+myoutput.txt
