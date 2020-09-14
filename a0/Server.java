@@ -129,9 +129,9 @@ class Server {
 		for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
 			String v1 = entry.getKey();
 			for (String v2 : entry.getValue()) {
-				if (isDescending(v2, v1) && graph.containsKey(v2)) {
+				if (graph.containsKey(v2)) {
 					for (String v3 : graph.get(v2)) {
-						if (isDescending(v3, v2) && graph.get(v1).contains(v3)) {
+						if (graph.get(v1).contains(v3)) {
 							sb.append(v1 + " " + v2 + " " + v3 + '\n');
 						}
 					}
