@@ -31,28 +31,48 @@ class Server {
 				/* accept a connection from the server socket. */
 				Socket connectionSocket = ssock.accept();
 
-				new Thread(() -> {
-					Socket clientSocket = connectionSocket;	//make sure not to overwrite newer connection sockets
+				/* per connection, per thread. */
+				new Thread(new RequestHandler(connectionSocket)).start();
 
-					while (true) {
-						try {
-							/* get edges from the input as bytes */
-							DataInputStream in = new DataInputStream(clientSocket.getInputStream());
-							int reqDataLen = in.readInt();
-							System.out.println("received request header, data payload has length " + reqDataLen);
-							byte[] bytes = new byte[reqDataLen];
-							in.readFully(bytes);
+			} catch (Exception e) {
+				try {
+					ssock.close();
+				} catch (IOException ioException) {
+					System.out.println("fail to close the server socket!");
+				}
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static class RequestHandler implements Runnable {
+		private Socket clientSocket;
+
+		public RequestHandler(Socket clientSocket) {
+			this.clientSocket = clientSocket;
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					/* get edges from the input as bytes */
+					DataInputStream in = new DataInputStream(clientSocket.getInputStream());
+					int reqDataLen = in.readInt();
+					System.out.println("received request header, data payload has length " + reqDataLen);
+					byte[] bytes = new byte[reqDataLen];
+					in.readFully(bytes);
 //							System.out.println("input bytes:");
 //							for (Byte b : bytes) {
 //								System.out.println(b);
 //							}
 
-							String inputDataString = new String(bytes, StandardCharsets.UTF_8);
-							//System.out.println(inputDataString);
+					String inputDataString = new String(bytes, StandardCharsets.UTF_8);
+					//System.out.println(inputDataString);
 
-							/* construct the graph: Adjacency Lists */
-							Map<String, Set<String>> graph = new HashMap<>();
-							buildGraph(inputDataString, graph);
+					/* construct the graph: Adjacency Lists */
+					Map<String, Set<String>> graph = new HashMap<>();
+					buildGraph(inputDataString, graph);
 //							System.out.println("input graph: ");
 //							for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
 //								System.out.print(entry.getKey() + ": ");
@@ -62,35 +82,25 @@ class Server {
 //								System.out.println();
 //							}
 
-							/* get triangles in the graph and write it to the output */
-							String triangleStr = getTriangles(graph);
+					/* get triangles in the graph and write it to the output */
+					String triangleStr = getTriangles(graph);
 //							System.out.println("The triangles are:" + "\n" + triangleStr);
 
-							/* transfer the result back to the client */
-							byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
-							DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
-							out.writeInt(outBytes.length);
-							out.write(outBytes);
-							out.flush();
-						} catch (IOException e) {    //the client has closed the connection
-							break;
-						}
-					}
-
-					try {
-						clientSocket.close();	//cautious: this closes connectionSocket that might already be assigned to another thread?
-					} catch (IOException e) {
-						System.out.println("fail to close the client socket!");
-						e.printStackTrace();
-					}
-				}).start();
-
-			} catch (Exception e) {
-				try {
-					ssock.close();
-				} catch (IOException ioException) {
-					System.out.println("fail to close the server socket!");
+					/* transfer the result back to the client */
+					byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
+					DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
+					out.writeInt(outBytes.length);
+					out.write(outBytes);
+					out.flush();
+				} catch (IOException e) {    //the client has closed the connection
+					break;
 				}
+			}
+
+			try {
+				clientSocket.close();
+			} catch (IOException e) {
+				System.out.println("fail to close the client socket!");
 				e.printStackTrace();
 			}
 		}
