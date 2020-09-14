@@ -28,54 +28,67 @@ class Server {
 				  - the payload is a string (UTF-8)
 				  - the inner loop ends when the client closes the connection
 				*/
-				/* 1. accept a connection from the server socket. */
+				/* accept a connection from the server socket. */
 				Socket connectionSocket = ssock.accept();
 
-				// while (true) {
-					try {
-						/* get edges from the input as bytes */
-						DataInputStream in = new DataInputStream(connectionSocket.getInputStream());
-						int reqDataLen = in.readInt();
-						System.out.println("received request header, data payload has length " + reqDataLen);
-						byte[] bytes = new byte[reqDataLen];
-						in.readFully(bytes);
-//						System.out.println("input bytes:");
-//						for (Byte b: bytes) {
-//							System.out.println(b);
-//						}
-
-						String inputDataString = new String(bytes, StandardCharsets.UTF_8);
-						//System.out.println(inputDataString);
-
-						/* construct the graph: Adjacency Lists */
-						Map<String, Set<String>> graph = new HashMap<>();
-						buildGraph(inputDataString, graph);
-//						System.out.println("input graph: ");
-//						for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
-//							System.out.print(entry.getKey() + ": ");
-//							for (String v2 : entry.getValue()) {
-//								System.out.print(v2 + " ");
+				new Thread(() -> {
+					while (true) {
+						try {
+							/* get edges from the input as bytes */
+							DataInputStream in = new DataInputStream(connectionSocket.getInputStream());
+							int reqDataLen = in.readInt();
+							System.out.println("received request header, data payload has length " + reqDataLen);
+							byte[] bytes = new byte[reqDataLen];
+							in.readFully(bytes);
+//							System.out.println("input bytes:");
+//							for (Byte b : bytes) {
+//								System.out.println(b);
 //							}
-//							System.out.println();
-//						}
 
-						/* get triangles in the graph and write it to the output */
-						String triangleStr = getTriangles(graph);
-//						System.out.println("The triangles are:" + "\n" + triangleStr);
+							String inputDataString = new String(bytes, StandardCharsets.UTF_8);
+							//System.out.println(inputDataString);
 
-						/* transfer the result back to the client */
-						byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
-						DataOutputStream dout = new DataOutputStream(connectionSocket.getOutputStream());
-						dout.writeInt(outBytes.length);
-						dout.write(outBytes);
-						dout.flush();
+							/* construct the graph: Adjacency Lists */
+							Map<String, Set<String>> graph = new HashMap<>();
+							buildGraph(inputDataString, graph);
+//							System.out.println("input graph: ");
+//							for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
+//								System.out.print(entry.getKey() + ": ");
+//								for (String v2 : entry.getValue()) {
+//									System.out.print(v2 + " ");
+//								}
+//								System.out.println();
+//							}
 
-					} catch (Exception e) {
+							/* get triangles in the graph and write it to the output */
+							String triangleStr = getTriangles(graph);
+//							System.out.println("The triangles are:" + "\n" + triangleStr);
+
+							/* transfer the result back to the client */
+							byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
+							DataOutputStream out = new DataOutputStream(connectionSocket.getOutputStream());
+							out.writeInt(outBytes.length);
+							out.write(outBytes);
+							out.flush();
+						} catch (IOException e) {    //the client has closed the connection
+							break;
+						}
+					}
+
+					try {
+						connectionSocket.close();
+					} catch (IOException e) {
+						System.out.println("fail to close the client socket!");
 						e.printStackTrace();
 					}
-//				}
+				}).start();
 
 			} catch (Exception e) {
+				try {
+					ssock.close();
+				} catch (IOException ioException) {
+					System.out.println("fail to close the server socket!");
+				}
 				e.printStackTrace();
 			}
 		}
