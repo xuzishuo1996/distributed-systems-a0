@@ -32,10 +32,12 @@ class Server {
 				Socket connectionSocket = ssock.accept();
 
 				new Thread(() -> {
+					Socket clientSocket = connectionSocket;	//make sure not to overwrite newer connection sockets
+
 					while (true) {
 						try {
 							/* get edges from the input as bytes */
-							DataInputStream in = new DataInputStream(connectionSocket.getInputStream());
+							DataInputStream in = new DataInputStream(clientSocket.getInputStream());
 							int reqDataLen = in.readInt();
 							System.out.println("received request header, data payload has length " + reqDataLen);
 							byte[] bytes = new byte[reqDataLen];
@@ -66,7 +68,7 @@ class Server {
 
 							/* transfer the result back to the client */
 							byte[] outBytes = triangleStr.getBytes(StandardCharsets.UTF_8);
-							DataOutputStream out = new DataOutputStream(connectionSocket.getOutputStream());
+							DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 							out.writeInt(outBytes.length);
 							out.write(outBytes);
 							out.flush();
@@ -76,7 +78,7 @@ class Server {
 					}
 
 					try {
-						connectionSocket.close();
+						clientSocket.close();	//cautious: this closes connectionSocket that might already be assigned to another thread?
 					} catch (IOException e) {
 						System.out.println("fail to close the client socket!");
 						e.printStackTrace();
