@@ -1,7 +1,10 @@
+import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class Server {
 	public static void main(String args[]) throws Exception {
@@ -13,6 +16,20 @@ class Server {
 
 		ServerSocket ssock = new ServerSocket(port);
 		System.out.println("listening on port " + port);
+
+		final ExecutorService exec = Executors.newFixedThreadPool(4);
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+		    System.out.println("executing shutdown hook");
+            exec.shutdownNow();
+//            if (!ssock.isClosed()) {  java.net.SocketException: Socket is closed
+//                try {
+//                    ssock.close();
+//                } catch (IOException ioException) {
+//                    System.out.println("fail to close the server socket!");
+//                }
+//            }
+        }));
+
 		while(true) {
 			try {
 				/*
@@ -31,15 +48,18 @@ class Server {
 				/* accept a connection from the server socket. */
 				Socket connectionSocket = ssock.accept();
 
-				/* per connection, per thread. */
-				new Thread(new RequestHandler(connectionSocket)).start();
+				/* delegate to work threads: per connection, per thread. */
+                exec.execute(new RequestHandler(connectionSocket));
+//				new Thread(new RequestHandler(connectionSocket)).start();
 
 			} catch (Exception e) {
+                exec.shutdownNow();
 				try {
 					ssock.close();
 				} catch (IOException ioException) {
 					System.out.println("fail to close the server socket!");
 				}
+                System.out.println("server outer loop catch exception!");
 				e.printStackTrace();
 			}
 		}

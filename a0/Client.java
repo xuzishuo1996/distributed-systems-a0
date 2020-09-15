@@ -24,7 +24,7 @@ class Client {
 		System.out.println("connected, sending request");
 
 		// back-to-back request
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 1; i <= 3; ++i) {
 			System.out.println("======================== back-to-back " + i + " =======================");
 
 			// step 3: send request to server
