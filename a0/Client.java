@@ -23,28 +23,35 @@ class Client {
 		Socket sock = new Socket(host, port);
 		System.out.println("connected, sending request");
 
-		// step 3: send request to server
-		DataOutputStream dout = new DataOutputStream(sock.getOutputStream());
-		byte[] bytes = input.getBytes("UTF-8");
-		long startTime = System.currentTimeMillis();
-		dout.writeInt(bytes.length);
-		dout.write(bytes);
-		dout.flush();
-		System.out.println("sent request header and " + bytes.length + " bytes of payload data to server");
+		// back-to-back request
+		for (int i = 0; i < 3; ++i) {
+			System.out.println("========================" + " i " + "=======================");
 
-		// step 4: receive response from server
-		DataInputStream din = new DataInputStream(sock.getInputStream());
-		int respDataLen = din.readInt();
-		System.out.println("received response header, data payload has length " + respDataLen);
-		bytes = new byte[respDataLen];
-		din.readFully(bytes);
-		long endTime = System.currentTimeMillis();
-		System.out.println("received " + bytes.length + " bytes of payload data from server in " + (endTime - startTime) + "ms");
-		String output = new String(bytes, StandardCharsets.UTF_8);
+			// step 3: send request to server
+			DataOutputStream dout = new DataOutputStream(sock.getOutputStream());
+			byte[] bytes = input.getBytes("UTF-8");
+			long startTime = System.currentTimeMillis();
+			dout.writeInt(bytes.length);
+			dout.write(bytes);
+			dout.flush();
+			System.out.println("sent request header and " + bytes.length + " bytes of payload data to server");
 
-		// step 5: save to file
-		Files.write(Paths.get(outputFileName), output.getBytes("UTF-8"));
-		System.out.println("wrote output to " + outputFileName);
+			// step 4: receive response from server
+			DataInputStream din = new DataInputStream(sock.getInputStream());
+			int respDataLen = din.readInt();
+			System.out.println("received response header, data payload has length " + respDataLen);
+			bytes = new byte[respDataLen];
+			din.readFully(bytes);
+			long endTime = System.currentTimeMillis();
+			System.out.println("received " + bytes.length + " bytes of payload data from server in " + (endTime - startTime) + "ms");
+			String output = new String(bytes, StandardCharsets.UTF_8);
+
+			// step 5: save to file
+			Files.write(Paths.get(outputFileName), output.getBytes("UTF-8"));
+			System.out.println("wrote output to " + outputFileName);
+
+			System.out.println();
+		}
 
 		// step 6: clean up
 		sock.close();

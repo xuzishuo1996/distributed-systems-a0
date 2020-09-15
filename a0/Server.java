@@ -54,12 +54,14 @@ class Server {
 
 		@Override
 		public void run() {
+//		    System.out.println("delegate to a new worker thread!");
+
 			while (true) {
 				try {
 					/* get edges from the input as bytes */
 					DataInputStream in = new DataInputStream(clientSocket.getInputStream());
 					int reqDataLen = in.readInt();
-					System.out.println("received request header, data payload has length " + reqDataLen);
+//					System.out.println("received request header, data payload has length " + reqDataLen);
 					byte[] bytes = new byte[reqDataLen];
 					in.readFully(bytes);
 //							System.out.println("input bytes:");
