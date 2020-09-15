@@ -72,7 +72,7 @@ class Server {
 					String inputDataString = new String(bytes, StandardCharsets.UTF_8);
 					//System.out.println(inputDataString);
 
-					/* construct the graph: Adjacency Lists */
+					/* construct the graph: Adjacency Sets - elems in sets are larger than their key */
 					Map<String, Set<String>> graph = new HashMap<>();
 					buildGraph(inputDataString, graph);
 //							System.out.println("input graph: ");
@@ -113,12 +113,14 @@ class Server {
 		while (scanner.hasNext()) {
 			String v1 = scanner.next();	//vertex 1
 			String v2 = scanner.next();	//vertex 2
-			// make sure (v1, v2) is in ascending order
-			if (isDescending(v1, v2)) {	// v1 > v2
-				String tmp = v1;
-				v1 = v2;
-				v2 = tmp;
-			}
+
+//            input is already is ascending order
+//			// make sure (v1, v2) is in ascending order
+//			if (isDescending(v1, v2)) {	// v1 > v2, swap
+//				String tmp = v1;
+//				v1 = v2;
+//				v2 = tmp;
+//			}
 			if (!graph.containsKey(v1)) {
 				graph.put(v1, new HashSet<>());
 			}
@@ -143,7 +145,7 @@ class Server {
 		return sb.toString();
 	}
 
-	private static boolean isDescending(String v1, String v2) {
-		return v1.length() > v2.length() || (v1.length() == v2.length() && v1.compareTo(v2) > 0);
-	}
+//	private static boolean isDescending(String v1, String v2) {
+//		return v1.length() > v2.length() || (v1.length() == v2.length() && v1.compareTo(v2) > 0);
+//	}
 }
