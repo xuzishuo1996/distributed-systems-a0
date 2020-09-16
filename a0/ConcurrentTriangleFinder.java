@@ -58,13 +58,18 @@ public class ConcurrentTriangleFinder {
 //	}
 
     public String getTriangles() {
+        List<FutureTask<StringBuilder>> ftArray = new ArrayList<>();
+
 //        ExecutorService exec = Executors.newFixedThreadPool(2);
         for (int id = 0; id < NUM_OF_CPU; ++id) {
 //            Future<String> future = exec.submit(new GetTrianglesTask(id));
             FutureTask<StringBuilder> ft = new FutureTask<>(new GetTrianglesTask(id));
+            ftArray.add(ft);
             ft.run();
+        }
+        for (int id = 0; id < NUM_OF_CPU; ++id) {
             try {
-                StringBuilder triangleStr = ft.get();
+                StringBuilder triangleStr = ftArray.get(id).get();
                 triangleStringBuilder.append(triangleStr);
             } catch (Exception e) {
                 e.printStackTrace();
