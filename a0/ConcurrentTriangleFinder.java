@@ -1,16 +1,17 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 public class ConcurrentTriangleFinder {
     private final String inputString;
     private final Map<String, Set<String>> graph;
     private final List<String> list;	// vertex lists for multi-threaded find triangle algorithm
-    private final StringBuffer triangleStrBuf;    // result
+    private final StringBuilder triangleStringBuilder;    // result
 
     public ConcurrentTriangleFinder(String inputString) {
         this.inputString = inputString;
         this.graph = new HashMap<>();
         this.list = new ArrayList<>();
-        this.triangleStrBuf = new StringBuffer();
+        this.triangleStringBuilder = new StringBuilder();
     }
 
     /* construct the graph: Adjacency Sets - elems in sets are larger than their key */
@@ -54,13 +55,23 @@ public class ConcurrentTriangleFinder {
 //	}
 
     public String getTriangles() {
+//        ExecutorService exec = Executors.newFixedThreadPool(2);
         for (int id = 0; id < 2; ++id) {
-            new Thread(new GetTrianglesTask(id)).start();
+//            Future<String> future = exec.submit(new GetTrianglesTask(id));
+            FutureTask<StringBuilder> ft = new FutureTask<>(new GetTrianglesTask(id));
+            ft.run();
+            try {
+                StringBuilder triangleStr = ft.get();
+                triangleStringBuilder.append(triangleStr);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        return triangleStrBuf.toString();
+//        exec.shutdownNow();
+        return triangleStringBuilder.toString();
     }
 
-    private class GetTrianglesTask implements Runnable {
+    private class GetTrianglesTask implements Callable<StringBuilder> {
         private final int id;
 
         private GetTrianglesTask(int id) {
@@ -68,20 +79,21 @@ public class ConcurrentTriangleFinder {
         }
 
         @Override
-		public void run() {
+		public StringBuilder call() {
+            StringBuilder buf = new StringBuilder();
 			for (int i = id; i < list.size(); i += 2) {
 				String v1 = list.get(i);
 				for (String v2 : graph.get(v1)) {
 					if (graph.containsKey(v2)) {
 						for (String v3 : graph.get(v2)) {
 							if (graph.get(v1).contains(v3)) {
-								triangleStrBuf.append(v1 + " " + v2 + " " + v3 + '\n');
+								buf.append(v1 + " " + v2 + " " + v3 + '\n');
 							}
 						}
 					}
 				}
 			}
-			int a = 1;
+			return buf;
 		}
 	}
 
