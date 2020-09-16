@@ -2,6 +2,8 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class ConcurrentTriangleFinder {
+    private static final int NUM_OF_CPU = Runtime.getRuntime().availableProcessors();
+
     private final String inputString;
     private final Map<String, Set<String>> graph;
     private final List<String> list;	// vertex lists for multi-threaded find triangle algorithm
@@ -12,6 +14,7 @@ public class ConcurrentTriangleFinder {
         this.graph = new HashMap<>();
         this.list = new ArrayList<>();
         this.triangleStringBuilder = new StringBuilder();
+        System.out.println("NUM_OF_CPU: " + NUM_OF_CPU);
     }
 
     /* construct the graph: Adjacency Sets - elems in sets are larger than their key */
@@ -56,7 +59,7 @@ public class ConcurrentTriangleFinder {
 
     public String getTriangles() {
 //        ExecutorService exec = Executors.newFixedThreadPool(2);
-        for (int id = 0; id < 2; ++id) {
+        for (int id = 0; id < NUM_OF_CPU; ++id) {
 //            Future<String> future = exec.submit(new GetTrianglesTask(id));
             FutureTask<StringBuilder> ft = new FutureTask<>(new GetTrianglesTask(id));
             ft.run();
@@ -81,7 +84,7 @@ public class ConcurrentTriangleFinder {
         @Override
 		public StringBuilder call() {
             StringBuilder buf = new StringBuilder();
-			for (int i = id; i < list.size(); i += 2) {
+			for (int i = id; i < list.size(); i += NUM_OF_CPU) {
 				String v1 = list.get(i);
 				for (String v2 : graph.get(v1)) {
 					if (graph.containsKey(v2)) {
