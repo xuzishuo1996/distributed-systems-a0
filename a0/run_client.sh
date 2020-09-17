@@ -17,7 +17,7 @@ SERVER_OUTPUT=myoutput.txt
 #read SERVER_PORT
 
 #java Client $SERVER_HOST $SERVER_PORT $SAMPLE_INPUT $SERVER_OUTPUT
-read USELESS
+#read USELESS
 java Client localhost 10123 $SAMPLE_INPUT $SERVER_OUTPUT
 
 echo --- Comparing server\'s output against sample output

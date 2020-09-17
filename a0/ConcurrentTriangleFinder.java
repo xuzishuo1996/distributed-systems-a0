@@ -20,7 +20,7 @@ public class ConcurrentTriangleFinder {
     }
 
     /* construct the graph: Adjacency Sets - elems in sets are larger than their key */
-    public void buildGraph() {
+    private void buildGraph() {
         BufferedReader reader = new BufferedReader(new StringReader(inputString));
         String s;
         try {
@@ -56,6 +56,8 @@ public class ConcurrentTriangleFinder {
 //	}
 
     public String getTriangles() {
+        buildGraph();
+
         for (int id = 0; id < 2; ++id) {
             new Thread(new GetTrianglesTask(id)).start();
         }
