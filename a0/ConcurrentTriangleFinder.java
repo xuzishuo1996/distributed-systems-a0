@@ -1,3 +1,6 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -18,25 +21,20 @@ public class ConcurrentTriangleFinder {
 
     /* construct the graph: Adjacency Sets - elems in sets are larger than their key */
     public void buildGraph() {
-        Scanner scanner = new Scanner(inputString);	//default delimiter include " "(0x32) and "/n"(0x10)
-        while (scanner.hasNext()) {
-            String v1 = scanner.next();	//vertex 1
-            String v2 = scanner.next();	//vertex 2
-
-//            input is already is ascending order
-//			// make sure (v1, v2) is in ascending order
-//			if (isDescending(v1, v2)) {	// v1 > v2, swap
-//				String tmp = v1;
-//				v1 = v2;
-//				v2 = tmp;
-//			}
-            if (!graph.containsKey(v1)) {
-                graph.put(v1, new HashSet<>());
-                list.add(v1);
+        BufferedReader reader = new BufferedReader(new StringReader(inputString));
+        String s;
+        try {
+            while ((s = reader.readLine()) != null) {
+                String[] nodes = s.split(" ");
+                if (!graph.containsKey(nodes[0])) {
+                    graph.put(nodes[0], new HashSet<>());
+                    list.add(nodes[0]);
+                }
+                graph.get(nodes[0]).add(nodes[1]);
             }
-            graph.get(v1).add(v2);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        scanner.close();
 
 //        System.out.println("input graph: ");
 //        for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
