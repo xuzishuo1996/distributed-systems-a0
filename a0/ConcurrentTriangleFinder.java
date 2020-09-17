@@ -2,37 +2,55 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 public class ConcurrentTriangleFinder {
     private final String inputString;
-    private final Map<String, Set<String>> graph;
-    private final List<String> list;	// vertex lists for multi-threaded find triangle algorithm
+    private final ConcurrentHashMap<String, Set<String>> graph;
+    private final List<String> list;
+//    private final Set<String> set;	// vertex set for multi-threaded find triangle algorithm
     private final StringBuffer triangleStrBuf;    // result
-    private final CountDownLatch endGate;
+    private final CountDownLatch buildGate;
+    private final CountDownLatch findGate;
 
     public ConcurrentTriangleFinder(String inputString) {
         this.inputString = inputString;
-        this.graph = new HashMap<>();
-        this.list = new ArrayList<>();
+        this.graph = new ConcurrentHashMap<>();
+        this.list = Collections.synchronizedList(new ArrayList<>());
+//        this.set = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.triangleStrBuf = new StringBuffer();
-        this.endGate = new CountDownLatch(2);
+        this.buildGate = new CountDownLatch(2);
+        this.findGate = new CountDownLatch(2);
     }
 
     /* construct the graph: Adjacency Sets - elems in sets are larger than their key */
     public void buildGraph() {
         BufferedReader reader = new BufferedReader(new StringReader(inputString));
-        String s;
-        try {
-            while ((s = reader.readLine()) != null) {
-                String[] nodes = s.split(" ");
-                if (!graph.containsKey(nodes[0])) {
-                    graph.put(nodes[0], new HashSet<>());
-                    list.add(nodes[0]);
+
+        for (int id = 0; id < 2; ++id) {
+            new Thread(() -> {
+                try {
+                    String s;
+                    while ((s = reader.readLine()) != null) {
+                        String[] nodes = s.split(" ");
+                        if (!graph.containsKey(nodes[0])) {
+                            graph.put(nodes[0], new HashSet<>());
+                            list.add(nodes[0]);
+                        }
+                        graph.get(nodes[0]).add(nodes[1]);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                graph.get(nodes[0]).add(nodes[1]);
-            }
-        } catch (IOException e) {
+
+                buildGate.countDown();
+            }).start();
+        }
+
+        try {
+            buildGate.await();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -60,7 +78,7 @@ public class ConcurrentTriangleFinder {
             new Thread(new GetTrianglesTask(id)).start();
         }
         try {
-            endGate.await();
+            findGate.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -88,7 +106,7 @@ public class ConcurrentTriangleFinder {
 					}
 				}
 			}
-			endGate.countDown();
+			findGate.countDown();
 		}
 	}
 
