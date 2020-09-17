@@ -1,16 +1,19 @@
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 public class ConcurrentTriangleFinder {
     private final String inputString;
     private final Map<String, Set<String>> graph;
     private final List<String> list;	// vertex lists for multi-threaded find triangle algorithm
     private final StringBuffer triangleStrBuf;    // result
+    private final CountDownLatch endGate;
 
     public ConcurrentTriangleFinder(String inputString) {
         this.inputString = inputString;
         this.graph = new HashMap<>();
         this.list = new ArrayList<>();
         this.triangleStrBuf = new StringBuffer();
+        this.endGate = new CountDownLatch(2);
     }
 
     /* construct the graph: Adjacency Sets - elems in sets are larger than their key */
@@ -33,6 +36,7 @@ public class ConcurrentTriangleFinder {
             }
             graph.get(v1).add(v2);
         }
+        scanner.close();
 
 //        System.out.println("input graph: ");
 //        for (Map.Entry<String, Set<String>> entry : graph.entrySet()) {
@@ -56,6 +60,11 @@ public class ConcurrentTriangleFinder {
     public String getTriangles() {
         for (int id = 0; id < 2; ++id) {
             new Thread(new GetTrianglesTask(id)).start();
+        }
+        try {
+            endGate.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         return triangleStrBuf.toString();
     }
@@ -81,7 +90,7 @@ public class ConcurrentTriangleFinder {
 					}
 				}
 			}
-			int a = 1;
+			endGate.countDown();
 		}
 	}
 
