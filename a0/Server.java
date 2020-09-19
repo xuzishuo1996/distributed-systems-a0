@@ -11,7 +11,6 @@ class Server {
 		int port = Integer.parseInt(args[0]);
 
 		ServerSocket ssock = new ServerSocket(port);
-		System.out.println("listening on port " + port);
 		while(true) {
 			try {
 				/*
