@@ -1,9 +1,5 @@
-# ECE 751 - Distributed Computing
+# Distributed Systems Course
 
- 
+### Assignment 0:  Sockets and Graphs. 
 
-### assignment 0:  Sockets and Graphs. 
-
-​	triangle enumeration problem
-
-​    client-server mode using using TCP/IP
+A client-server system using TCP sockets for processing graph data (triangle enumeration problem) with multi-threading. 
